@@ -134,36 +134,55 @@ def plot():
         feature_importances = model.feature_importances_
 
         # Create a bar chart of feature importances
-        fig, ax = plt.subplots()
-        ax.bar(X.columns, feature_importances)
-        ax.set_xlabel('Feature')
-        ax.set_ylabel('Feature Importance')
-        # Use st.pyplot() to display the plot within the Streamlit web app
-        st.pyplot(fig)
+        col_plot5, col_plot6 = st.columns(2)
+        with col_plot5, _lock:
+            st.subheader('Feature Importances')
+            fig, ax = plt.subplots()
+            ax.bar(X.columns, feature_importances)
+            ax.set_xlabel('Feature')
+            ax.set_ylabel('Feature Importance')
+            st.pyplot(fig)
 
-    # ROC curves and AUC - Scikit Learn
-    if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
-        # Calculate the ROC curve and AUC for the selected model
-        fpr, tpr, thresholds = metrics.roc_curve(y_test, model.predict_proba(X_test)[:, 1])
-        roc_auc = metrics.auc(fpr, tpr)
+        # ROC curves and AUC - Scikit Learn
+        if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
+            # Calculate the ROC curve and AUC for the selected model
+            fpr, tpr, thresholds = metrics.roc_curve(y_test, model.predict_proba(X_test)[:, 1])
+            roc_auc = metrics.auc(fpr, tpr)
 
-        # Create a line plot of the ROC curve
-        fig = plt.figure()
-        ax = fig.subplots()
-        ax.plot(fpr, tpr)
-        ax.set_xlabel('False Positive Rate')
-        ax.set_ylabel('True Positive Rate')
-        ax.set_title('ROC Curve')
-        # Use st.pyplot() to display the plot within the Streamlit web app
-        st.pyplot(fig)
+            # Create a line plot of the ROC curve
+            col_plot7, col_plot8 = st.columns(2)
+            with col_plot7, _lock:
+                st.subheader('ROC Curve')
+                fig, ax = plt.subplots()
+                ax.plot(fpr, tpr)
+                ax.set_xlabel('False Positive Rate')
+                ax.set_ylabel('True Positive Rate')
+                ax.set_title('ROC Curve')
+                st.pyplot(fig)
 
-        # Print the AUC value
-        st.write('AUC:', roc_auc)
+            # Print the AUC value
+            st.write('AUC:', roc_auc)
 
-    # Confusion matrices - Scikit Learn
-    if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest', 'KNN']:
-        # Calculate the confusion matrix for the selected model
-        confusion_matrix = metrics.confusion_matrix(y_test, model.predict(X_test))
+        # Confusion matrices - Scikit Learn
+        if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
+            # Calculate the confusion matrix for the selected model
+            confusion_matrix = metrics.confusion_matrix(y_test, model.predict(X_test))
+
+            col_plot9, col_plot10 = st.columns(2)
+            with col_plot9, _lock:
+                st.subheader('Confusion Matrix')
+                fig, ax = plt.subplots()
+                sns.heatmap(confusion_matrix, annot=True, fmt='g', linewidths=0.5, ax=ax)
+                ax.set_xlabel('Predicted Label')
+                ax.set_ylabel('Actual Label')
+                st.pyplot(fig)
+
+            with col_plot10, _lock:
+                st.subheader('Precision and Recall')
+                precision = metrics.precision_score(y_test, model.predict(X_test))
+                recall = metrics.recall_score(y_test, model.predict(X_test))
+                st.write(f'Precision: {precision}')
+                st.write(f'Recall: {recall}')
 
 
 data = scikit_func.load_data()
