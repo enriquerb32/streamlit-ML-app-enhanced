@@ -72,6 +72,8 @@ def create_sidelayout(scipy_col, pyspark_col):
     if pyspark_enabled == 'Yes':
         pyspark_operation(pyspark_col)
 
+    plot()
+
 
 def create_subcol():
     """
