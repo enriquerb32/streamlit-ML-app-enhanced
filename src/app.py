@@ -91,11 +91,7 @@ def create_subcol():
 
 
 def plot():
-    """
-    Plotting some basic chart to demonstrate the data
-    TODO: Add caching to avoid loading the plots for every event
-    :return:
-    """
+    # Basic charts
     col_plot1, col_plot2 = st.columns(2)
     temp_df = data
     with col_plot1, _lock:
@@ -115,10 +111,67 @@ def plot():
         ax = fig.subplots()
         df_categorical = temp_df.loc[:, ['cholesterol', 'gluc', 'smoke', 'alco', 'active']]
         sns.countplot(x="variable", hue="value", data=pd.melt(df_categorical), ax=ax)
+
         ax.set_xlabel('Variable')
         ax.set_ylabel('Count')
         st.pyplot(fig)
 
+    # Feature importance plots - Scikit Learn
+    if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest', 'KNN']:
+        # Calculate feature importances for the selected model
+        model = scikit_func.trigger_classifier(scikit_func.get_sidebar_classifier(), data)
+        feature_importances = model.feature_importances_
+
+        # Create a bar chart of feature importances
+        fig, ax = plt.subplots()
+        ax.bar(X.columns, feature_importances)
+        ax.set_xlabel('Feature')
+        ax.set_ylabel('Feature Importance')
+        plt.show()
+
+    # ROC curves and AUC - Scikit Learn
+    if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
+        # Calculate the ROC curve and AUC for the selected model
+        fpr, tpr, thresholds = metrics.roc_curve(y_test, model.predict_proba(X_test)[:, 1])
+        roc_auc = metrics.auc(fpr, tpr)
+
+        # Create a line plot of the ROC curve
+        plt.plot(fpr, tpr)
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('ROC Curve')
+        plt.show()
+
+        # Print the AUC value
+        print('AUC:', roc_auc)
+
+    # Confusion matrices - Scikit Learn
+    if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest', 'KNN']:
+        # Calculate the confusion matrix for the selected model
+        confusion_matrix = metrics.confusion_matrix(y_test, model.predict(X_test))
+
+        # Print the confusion matrix
+        print(confusion_matrix)
+
+        # Calculate precision, recall, and F1-score
+        precision = metrics.precision_score(y_test, model.predict(X_test))
+        recall = metrics.recall_score(y_test, model.predict(X_test))
+        f1 = metrics.f1_score(y_test, model.predict(X_test))
+
+        # Print precision, recall, and F1-score
+        print('Precision:', precision)
+        print('Recall:', recall)
+        print('F1-score:', f1)
+
+    ## Here's an example of how to calculate feature importance for the PySpark part:
+    
+    #if scikit_func.get_sidebar_classifier() == 'Decision Tree':
+    ## Calculate feature importances for the selected model
+    #model = pyspark_func.training(trainingData, testData)
+    #feature_importances = model.featureImportances
+
+    ## Create a bar chart of feature importances
+    #spark.createDataFrame(feature_importances).show()  
 
 data = scikit_func.load_data()
 X_train, X_test, y_train, y_test = scikit_func.prepare_dataset(data)
