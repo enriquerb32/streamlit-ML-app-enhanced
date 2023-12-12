@@ -70,9 +70,15 @@ def create_sidelayout(scipy_col, pyspark_col):
     scipy_col.write(f'Accuracy =  {accuracy}')
 
     if pyspark_enabled == 'Yes':
-        pyspark_operation(pyspark_col)
+       pyspark_operation(pyspark_col)
+       if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
+          plot()
 
-    plot()
+       else:
+          st.warning('Plots for PySpark are not available yet')
+
+    if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
+       plot()
 
 
 def create_subcol():
