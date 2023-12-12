@@ -1,5 +1,5 @@
 FROM jupyter/pyspark-notebook:latest
-LABEL maintainer="Abhishek Choudhary @Abc"
+LABEL maintainer="Enrique Real"
 
 EXPOSE 8501
 
