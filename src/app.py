@@ -119,7 +119,7 @@ def create_subcol():
             st.subheader(f'Scikit-Learn Plot {i + 1}')
         with col_plot[1]:
             # Render the corresponding plot within the column
-            render_plot(i)
+            render_plot(scipy_col, pyspark_col, i)
 
     # Check if PySpark is enabled and display the PySpark section if so
     if pyspark_enabled == 'Yes':
@@ -135,7 +135,7 @@ def create_subcol():
                 st.subheader(f'PySpark Plot {i + 1}')
             with col_plot[1]:
                 # Render the corresponding plot within the column
-                render_plot(num_plots + i)
+                render_plot(scipy_col, pyspark_col, num_plots + i)
 
     return scipy_col, pyspark_col
 
@@ -172,7 +172,7 @@ def plot(scipy_col, pyspark_col, i):
     plot_thread.start()
 
 
-def _render_plot(scipy_col, pyspark_col, i, plot_title, fig_size):
+def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size):
     # Create the figure and axes
     fig, ax = plt.subplots(figsize=fig_size)
 
@@ -209,7 +209,6 @@ def _render_plot(scipy_col, pyspark_col, i, plot_title, fig_size):
         st.pyplot(fig)
 
 
-
 data = scikit_func.load_data()
 X_train, X_test, y_train, y_test = scikit_func.prepare_dataset(data)
 st.sidebar.markdown('''
@@ -241,6 +240,10 @@ def main():
     scipy_col, pyspark_col = create_subcol()
     create_sidelayout(scipy_col, pyspark_col)
     plot()
+
+
+if __name__ == '__main__':
+    main()
 
 
 if __name__ == '__main__':
