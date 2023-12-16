@@ -140,7 +140,7 @@ def create_subcol():
     return scipy_col, pyspark_col
 
 
-def plot(scipy_col, pyspark_col, i):
+def plot(scipy_col, pyspark_col, i, scikit_classifier_name):  # Pass scikit_classifier_name as an argument
     if i == 0:
         plot_title = "Cardiovascular Diseases Distribution"
         fig_size = (6, 4)
