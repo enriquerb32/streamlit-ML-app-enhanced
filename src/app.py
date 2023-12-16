@@ -58,131 +58,157 @@ def pyspark_operation(pyspark_col):
 
 
 def create_sidelayout(scipy_col, pyspark_col):
+    """
+    Create machine learning options and handle plots
+    :param scipy_col: Scikit-Learn section in the main page
+    :param pyspark_col: PySpark section in the main page
+    """
+
     st.sidebar.title('Machine Learning Options')
-    st.sidebar.subheader('Scikit-Learn')
+
+    # Select the classifier and handle parameter selection
     scikit_classifier_name = st.sidebar.selectbox(
         'Select classifier',
-        scikit_func.get_sidebar_classifier(), key='scikit'
+        scikit_func.get_sidebar_classifier(),
+        key='scikit'
     )
+
+    # Display classifier information in the Scikit-Learn section
     scipy_col.write(f'Classifier = {scikit_classifier_name}')
+
+    # Handle parameter selection for the selected classifier
     params = add_parameter_ui(scikit_classifier_name)
+
+    # Train the model and calculate accuracy
     accuracy = scikit_func.trigger_classifier(scikit_classifier_name, params, X_train, X_test, y_train, y_test)
-    scipy_col.write(f'Accuracy =  {accuracy}')
 
+    # Display accuracy in the Scikit-Learn section
+    scipy_col.write(f'Accuracy = {accuracy}')
+
+    # Check if PySpark is enabled and handle PySpark operations if so
     if pyspark_enabled == 'Yes':
-       pyspark_operation(pyspark_col)
-       if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
-          plot()
+        pyspark_operation(pyspark_col)
 
-       else:
-          st.warning('Plots for PySpark are not available yet')
+        # Check if the selected classifier is supported for plotting in PySpark
+        if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
+            # Plot the corresponding PySpark plots
+            for i in range(3):
+                plot(scipy_col, pyspark_col, i)
+        else:
+            # Display a warning for PySpark plotting
+            st.warning('Plots for PySpark are not available yet')
 
-    if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
-       plot()
+
 
 
 def create_subcol():
     """
-    Create 2 Center page Columns for Scikit-Learn and Pyspark
+    Create multiple columns based on the number of plots
     :return:
     """
+    num_plots = 3  # Assuming you have 3 groups of plots
     scipy_col, pyspark_col = st.columns(2)
+
+    # Display the Scikit-Learn section
     scipy_col.header('''
-    __Scikit Learn ML__  
-    ![scikit](https://scikit-learn.org/stable/_static/scikit-learn-logo-small.png)''')
+        __Scikit Learn ML__
+        ![scikit](https://scikit-learn.org/stable/_static/scikit-learn-logo-small.png)''')
+
+    # Dynamically create columns for the Scikit-Learn plots
+    for i in range(num_plots):
+        col_plot = st.columns(2)
+        with col_plot[0], _lock:
+            st.subheader(f'Scikit-Learn Plot {i + 1}')
+        with col_plot[1]:
+            # Render the corresponding plot within the column
+            render_plot(i)
+
+    # Check if PySpark is enabled and display the PySpark section if so
     if pyspark_enabled == 'Yes':
         pyspark_col.header('''
-        __PySpark Learn ML__  
-        ![pyspark](https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Apache_Spark_logo.svg/120px-Apache_Spark_logo.svg.png)
-        ''')
+              __PySpark Learn ML__
+              ![pyspark](https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Apache_Spark_logo.svg/120px-Apache_Spark_logo.svg.png)
+              ''')
+
+        # Dynamically create columns for the PySpark plots
+        for i in range(num_plots):
+            col_plot = st.columns(2)
+            with col_plot[0], _lock:
+                st.subheader(f'PySpark Plot {i + 1}')
+            with col_plot[1]:
+                # Render the corresponding plot within the column
+                render_plot(num_plots + i)
+
     return scipy_col, pyspark_col
 
 
-def plot():
-    # Basic charts
-    col_plot1, col_plot2 = st.columns(2)
-    temp_df = data
+def plot(scipy_col, pyspark_col, i):
+    """
+    Renders the plot based on the given plot group index
+    :param scipy_col: Scikit-Learn section in the main page
+    :param pyspark_col: PySpark section in the main page
+    :param i: Plot group index
+    """
 
-    with col_plot1, _lock:
-        st.subheader('Age over Number of people with CVD exceed')
-        fig = Figure()
-        ax = fig.subplots()
-        temp_df['years'] = (temp_df['age'] / 365).round().astype('int')
-        sns.countplot(x='years', hue='cardio', data=temp_df, palette="Set2", ax=ax)
+    if i == 0:
+        plot_title = "Cardiovascular Diseases Distribution"
+        fig_size = (6, 4)
+        col_plot = st.columns(2)
+    elif i == 1:
+        plot_title = "People Exposed to CVD more"
+        fig_size = (6, 4)
+        col_plot = st.columns(2)
+    elif i == 2:
+        if scikit_classifier_name == "Decision Tree":
+            plot_title = "Feature Importances - Scikit-Learn"
+        elif scikit_classifier_name == "Random Forest":
+            plot_title = "Feature Importances - Scikit-Learn"
+        else:
+            plot_title = "Feature Importances - PySpark"
+        fig_size = (10, 6)
+        col_plot = st.columns(3)
+    elif i == 3:
+        plot_title = "ROC Curve"
+        fig_size = (6, 4)
+        col_plot = st.columns(2)
+    elif i == 4:
+        plot_title = "Confusion Matrix"
+        fig_size = (7, 5)
+        col_plot = st.columns(2)
 
-        ax.set_xlabel('Year')
-        ax.set_ylabel('Count')
-        # Use st.pyplot() to display the plot within the Streamlit web app
-        st.pyplot(fig)
-
-    with col_plot2, _lock:
-        st.subheader('People Exposed to CVD more')
-        fig = Figure()
-        ax = fig.subplots()
-        df_categorical = temp_df.loc[:, ['cholesterol', 'gluc', 'smoke', 'alco', 'active']]
-        sns.countplot(x="variable", hue="value", data=pd.melt(df_categorical), ax=ax)
-
-        ax.set_xlabel('Variable')
-        ax.set_ylabel('Count')
-        # Use st.pyplot() to display the plot within the Streamlit web app
-        st.pyplot(fig)
-
-    # Feature importance plots - Scikit Learn
-    if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest', 'KNN']:
-        # Calculate feature importances for the selected model
-        model = scikit_func.trigger_classifier(scikit_func.get_sidebar_classifier(), data)
-        feature_importances = model.feature_importances_
-
-        # Create a bar chart of feature importances
-        col_plot5, col_plot6 = st.columns(2)
-        with col_plot5, _lock:
-            st.subheader('Feature Importances')
-            fig, ax = plt.subplots()
+    # Render the plot within the corresponding column and set the plot title
+    with col_plot[0], _lock:
+        st.subheader(plot_title)
+        fig, ax = plt.subplots(figsize=fig_size)
+        # Generate the appropriate plot based on the plot group index
+        if i == 0:
+            plt.hist(data['cardio'], edgecolor='black', bins=10, alpha=0.7)
+        elif i == 1:
+            sns.countplot(
+                x="variable", hue="value", data=pd.melt(df_categorical), ax=ax
+            )
+        elif i == 2:
+            feature_importances = model.get_feature_importances()
             ax.bar(X.columns, feature_importances)
             ax.set_xlabel('Feature')
             ax.set_ylabel('Feature Importance')
-            st.pyplot(fig)
+        elif i == 3:
+            fpr, tpr, thresholds = roc_curve(y_test, model.predict_proba(X_test)[:, 1])
+            ax.plot(fpr, tpr)
+            ax.set_xlabel('False Positive Rate')
+            ax.set_ylabel('True Positive Rate')
+            ax.set_title('ROC Curve')
+            ax.set_title('ROC Curve')
+            st.write('AUC:', round(roc_auc, 3))
+        elif i == 4:
+            confusion_matrix = confusion_matrix(y_test, model.predict(X_test))
+            sns.heatmap(
+                confusion_matrix, annot=True, fmt='g', linewidths=0.5, ax=ax
+            )
+            ax.set_xlabel('Predicted Label')
+            ax.set_ylabel('Actual Label')
 
-        # ROC curves and AUC - Scikit Learn
-        if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
-            # Calculate the ROC curve and AUC for the selected model
-            fpr, tpr, thresholds = metrics.roc_curve(y_test, model.predict_proba(X_test)[:, 1])
-            roc_auc = metrics.auc(fpr, tpr)
-
-            # Create a line plot of the ROC curve
-            col_plot7, col_plot8 = st.columns(2)
-            with col_plot7, _lock:
-                st.subheader('ROC Curve')
-                fig, ax = plt.subplots()
-                ax.plot(fpr, tpr)
-                ax.set_xlabel('False Positive Rate')
-                ax.set_ylabel('True Positive Rate')
-                ax.set_title('ROC Curve')
-                st.pyplot(fig)
-
-            # Print the AUC value
-            st.write('AUC:', roc_auc)
-
-        # Confusion matrices - Scikit Learn
-        if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
-            # Calculate the confusion matrix for the selected model
-            confusion_matrix = metrics.confusion_matrix(y_test, model.predict(X_test))
-
-            col_plot9, col_plot10 = st.columns(2)
-            with col_plot9, _lock:
-                st.subheader('Confusion Matrix')
-                fig, ax = plt.subplots()
-                sns.heatmap(confusion_matrix, annot=True, fmt='g', linewidths=0.5, ax=ax)
-                ax.set_xlabel('Predicted Label')
-                ax.set_ylabel('Actual Label')
-                st.pyplot(fig)
-
-            with col_plot10, _lock:
-                st.subheader('Precision and Recall')
-                precision = metrics.precision_score(y_test, model.predict(X_test))
-                recall = metrics.recall_score(y_test, model.predict(X_test))
-                st.write(f'Precision: {precision}')
-                st.write(f'Recall: {recall}')
+        st.pyplot(fig)
 
 
 data = scikit_func.load_data()
@@ -199,7 +225,7 @@ def main():
         '''Streamlit ![](https://assets.website-files.com/5dc3b47ddc6c0c2a1af74ad0/5e0a328bedb754beb8a973f9_logomark_website.png) Healthcare ML Data App''')
     st.subheader(
         'Streamlit Healthcare example By '
-        '[Abhishek Choudhary aka ABC](https://www.linkedin.com/in/iamabhishekchoudhary/)')
+        '[Enrique Real](https://es.linkedin.com/in/enrique-real-bru-057150237)')
     st.markdown(
         "**Cardiovascular Disease dataset by Kaggle** 👇"
     )
