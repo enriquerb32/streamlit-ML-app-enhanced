@@ -119,7 +119,8 @@ def create_subcol():
             st.subheader(f'Scikit-Learn Plot {i + 1}')
         with col_plot[1]:
             # Render the corresponding plot within the column
-            render_plot(scipy_col, pyspark_col, i, f'Scikit-Learn Plot {i + 1}')
+            fig_size = (8, 6)
+            render_plot(scipy_col, pyspark_col, i, f'Scikit-Learn Plot {i + 1}', fig_size)
 
     # Check if PySpark is enabled and display the PySpark section if so
     if pyspark_enabled == 'Yes':
