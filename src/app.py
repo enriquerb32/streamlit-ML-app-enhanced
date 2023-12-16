@@ -99,8 +99,6 @@ def create_sidelayout(scipy_col, pyspark_col):
             st.warning('Plots for PySpark are not available yet')
 
 
-
-
 def create_subcol():
     """
     Create multiple columns based on the number of plots
@@ -143,13 +141,6 @@ def create_subcol():
 
 
 def plot(scipy_col, pyspark_col, i):
-    """
-    Renders the plot based on the given plot group index
-    :param scipy_col: Scikit-Learn section in the main page
-    :param pyspark_col: PySpark section in the main page
-    :param i: Plot group index
-    """
-
     if i == 0:
         plot_title = "Cardiovascular Diseases Distribution"
         fig_size = (6, 4)
@@ -176,39 +167,47 @@ def plot(scipy_col, pyspark_col, i):
         fig_size = (7, 5)
         col_plot = st.columns(2)
 
-    # Render the plot within the corresponding column and set the plot title
-    with col_plot[0], _lock:
-        st.subheader(plot_title)
-        fig, ax = plt.subplots(figsize=fig_size)
-        # Generate the appropriate plot based on the plot group index
-        if i == 0:
-            plt.hist(data['cardio'], edgecolor='black', bins=10, alpha=0.7)
-        elif i == 1:
-            sns.countplot(
-                x="variable", hue="value", data=pd.melt(df_categorical), ax=ax
-            )
-        elif i == 2:
-            feature_importances = model.get_feature_importances()
-            ax.bar(X.columns, feature_importances)
-            ax.set_xlabel('Feature')
-            ax.set_ylabel('Feature Importance')
-        elif i == 3:
-            fpr, tpr, thresholds = roc_curve(y_test, model.predict_proba(X_test)[:, 1])
-            ax.plot(fpr, tpr)
-            ax.set_xlabel('False Positive Rate')
-            ax.set_ylabel('True Positive Rate')
-            ax.set_title('ROC Curve')
-            ax.set_title('ROC Curve')
-            st.write('AUC:', round(roc_auc, 3))
-        elif i == 4:
-            confusion_matrix = confusion_matrix(y_test, model.predict(X_test))
-            sns.heatmap(
-                confusion_matrix, annot=True, fmt='g', linewidths=0.5, ax=ax
-            )
-            ax.set_xlabel('Predicted Label')
-            ax.set_ylabel('Actual Label')
+    # Create a new thread to render the plot
+    plot_thread = threading.Thread(target=_render_plot, args=(scipy_col, pyspark_col, i, plot_title, fig_size))
+    plot_thread.start()
 
+
+def _render_plot(scipy_col, pyspark_col, i, plot_title, fig_size):
+    # Create the figure and axes
+    fig, ax = plt.subplots(figsize=fig_size)
+
+    # Generate the appropriate plot based on the plot group index
+    if i == 0:
+        plt.hist(data['cardio'], edgecolor='black', bins=10, alpha=0.7)
+    elif i == 1:
+        sns.countplot(
+            x="variable", hue="value", data=pd.melt(df_categorical), ax=ax
+        )
+    elif i == 2:
+        feature_importances = model.get_feature_importances()
+        ax.bar(X.columns, feature_importances)
+        ax.set_xlabel('Feature')
+        ax.set_ylabel('Feature Importance')
+    elif i == 3:
+        fpr, tpr, thresholds = roc_curve(y_test, model.predict_proba(X_test)[:, 1])
+        ax.plot(fpr, tpr)
+        ax.set_xlabel('False Positive Rate')
+        ax.set_ylabel('True Positive Rate')
+        ax.set_title('ROC Curve')
+        ax.set_title('ROC Curve')
+        st.write('AUC:', round(roc_auc, 3))
+    elif i == 4:
+        confusion_matrix = confusion_matrix(y_test, model.predict(X_test))
+        sns.heatmap(
+            confusion_matrix, annot=True, fmt='g', linewidths=0.5, ax=ax
+        )
+        ax.set_xlabel('Predicted Label')
+        ax.set_ylabel('Actual Label')
+
+    # Notify the main thread that the plot has been rendered
+    with _lock:
         st.pyplot(fig)
+
 
 
 data = scikit_func.load_data()
