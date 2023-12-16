@@ -119,7 +119,7 @@ def create_subcol():
             st.subheader(f'Scikit-Learn Plot {i + 1}')
         with col_plot[1]:
             # Render the corresponding plot within the column
-            render_plot(scipy_col, pyspark_col, i)
+            render_plot(scipy_col, pyspark_col, i, f'Scikit-Learn Plot {i + 1}')
 
     # Check if PySpark is enabled and display the PySpark section if so
     if pyspark_enabled == 'Yes':
@@ -135,12 +135,11 @@ def create_subcol():
                 st.subheader(f'PySpark Plot {i + 1}')
             with col_plot[1]:
                 # Render the corresponding plot within the column
-                render_plot(scipy_col, pyspark_col, num_plots + i)
+                render_plot(scipy_col, pyspark_col, num_plots + i, f'PySpark Plot {i + 1}')
 
     return scipy_col, pyspark_col
 
-
-def plot(scipy_col, pyspark_col, i, scikit_classifier_name):  # Pass scikit_classifier_name as an argument
+def plot(scipy_col, pyspark_col, i, scikit_classifier_name):  
     if i == 0:
         plot_title = "Cardiovascular Diseases Distribution"
         fig_size = (6, 4)
@@ -170,7 +169,7 @@ def plot(scipy_col, pyspark_col, i, scikit_classifier_name):  # Pass scikit_clas
     # Create a new thread to render the plot
     plot_thread = threading.Thread(target=_render_plot, args=(scipy_col, pyspark_col, i, plot_title, fig_size))
     plot_thread.start()
-
+    
 
 def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size):
     # Create the figure and axes
