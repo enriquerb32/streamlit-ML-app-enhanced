@@ -100,12 +100,16 @@ def create_sidelayout(scipy_col, pyspark_col):
             st.warning('Plots for PySpark are not available yet')
 
 
-def create_subcol():
+
+def create_subcol(data, X_test, y_test, model):
     """
     Create multiple columns based on the number of plots
-    :return:
+    :return: Tuple containing Streamlit columns
     """
     num_plots = 3  # Assuming you have 3 groups of plots
+    fig_size = (8, 6)  # Assuming a default figure size
+
+    # Create Streamlit columns
     scipy_col, pyspark_col = st.columns(2)
 
     # Display the Scikit-Learn section
@@ -115,12 +119,11 @@ def create_subcol():
 
     # Dynamically create columns for the Scikit-Learn plots
     for i in range(num_plots):
-        col_plot = st.columns(2)
+        col_plot = scipy_col.columns(2)  # Use 'scipy_col' instead of 'st'
         with col_plot[0], _lock:
             st.subheader(f'Scikit-Learn Plot {i + 1}')
         with col_plot[1]:
             # Render the corresponding plot within the column
-            fig_size = (8, 6)
             render_plot(scipy_col, pyspark_col, i, f'Scikit-Learn Plot {i + 1}', fig_size, data, X_test, y_test, model)
 
     # Check if PySpark is enabled and display the PySpark section if so
@@ -132,7 +135,7 @@ def create_subcol():
 
         # Dynamically create columns for the PySpark plots
         for i in range(num_plots):
-            col_plot = st.columns(2)
+            col_plot = pyspark_col.columns(2)  # Use 'pyspark_col' instead of 'st'
             with col_plot[0], _lock:
                 st.subheader(f'PySpark Plot {i + 1}')
             with col_plot[1]:
@@ -142,7 +145,6 @@ def create_subcol():
     return scipy_col, pyspark_col
 
     
-
 def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test, model, roc_auc=None):
     # Create the figure and axes
     fig, ax = plt.subplots(figsize=fig_size)
@@ -150,6 +152,9 @@ def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test
     # Generate the appropriate plot based on the plot group index
     if i == 0:
         plt.hist(data['cardio'], edgecolor='black', bins=10, alpha=0.7)
+        ax.set_title('Histogram of Cardio Labels')
+        ax.set_xlabel('Cardio Label')
+        ax.set_ylabel('Frequency')
     elif i == 1:
         # Assuming your data is stored in a DataFrame named 'data'
         categorical_columns = ['gender', 'cholesterol', 'gluc', 'smoke', 'alco', 'active', 'cardio']
@@ -164,11 +169,15 @@ def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test
         sns.countplot(
             x="variable", hue="value", data=df_categorical, ax=ax
         )
+        ax.set_title('Count Plot of Categorical Variables')
+        ax.set_xlabel('Variable')
+        ax.set_ylabel('Count')
     elif i == 2:
         # Handle feature importances based on the classifier type
         if hasattr(model, 'feature_importances_'):
             feature_importances = model.feature_importances_
             ax.bar(X.columns, feature_importances)
+            ax.set_title('Feature Importances')
             ax.set_xlabel('Feature')
             ax.set_ylabel('Feature Importance')
     elif i == 3:
@@ -176,9 +185,9 @@ def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test
         if hasattr(model, 'predict_proba'):
             fpr, tpr, thresholds = roc_curve(y_test, model.predict_proba(X)[:, 1])
             ax.plot(fpr, tpr)
+            ax.set_title('ROC Curve')
             ax.set_xlabel('False Positive Rate')
             ax.set_ylabel('True Positive Rate')
-            ax.set_title('ROC Curve')
             st.write('AUC:', round(roc_auc_score(y_test, model.predict_proba(X)[:, 1]), 3))
     elif i == 4:
         # Assuming your model has a predict method
@@ -187,42 +196,41 @@ def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test
             sns.heatmap(
                 confusion_mat, annot=True, fmt='g', linewidths=0.5, ax=ax
             )
+            ax.set_title('Confusion Matrix')
             ax.set_xlabel('Predicted Label')
             ax.set_ylabel('Actual Label')
 
 
-data = scikit_func.load_data()
-X_train, X_test, y_train, y_test = scikit_func.prepare_dataset(data)
-st.sidebar.markdown('''
-__⛔ PySpark is computational expensive operation __  
-Selecting _Yes_ will trigger Spark Session automatically!  
-''', unsafe_allow_html=True)
-pyspark_enabled = st.sidebar.radio("PySpark_Enabled", ('No', 'Yes'))
-
-
+# Main function
 def main():
-    st.title(
-        '''Streamlit ![](https://assets.website-files.com/5dc3b47ddc6c0c2a1af74ad0/5e0a328bedb754beb8a973f9_logomark_website.png) Healthcare ML Data App''')
-    st.subheader(
-        'Streamlit Healthcare example By '
-        '[Enrique Real](https://es.linkedin.com/in/enrique-real-bru-057150237)')
-    st.markdown(
-        "**Cardiovascular Disease dataset by Kaggle** 👇"
-    )
+    st.title('''Streamlit ![](https://assets.website-files.com/5dc3b47ddc6c0c2a1af74ad0/5e0a328bedb754beb8a973f9_logomark_website.png) Healthcare ML Data App''')
+    st.subheader('Streamlit Healthcare example By [Enrique Real](https://es.linkedin.com/in/enrique-real-bru-057150237)')
+    st.markdown("**Cardiovascular Disease dataset by Kaggle** 👇")
     st.markdown('''
-    This is source of the dataset and problem statement [Kaggle Link](https://www.kaggle.com/sulianova/cardiovascular-disease-dataset)  
+    This is the source of the dataset and the problem statement [Kaggle Link](https://www.kaggle.com/sulianova/cardiovascular-disease-dataset)  
     The dataset consists of 70 000 records of patients data, 11 features + target  
     
     ◀️ Running the same data over ___Scikit Learn & Pyspark ML___ - A simple Comparison and Selection  
-    ___This is just for demonstration & absolutely not about Best Machine Learning Model!___  
+    ___This is just for demonstration & absolutely not about the Best Machine Learning Model!___  
     ''')
+
     st.dataframe(data=data.head(20), height=200)
     st.write('Shape of dataset:', X_train.shape)
     st.write('number of classes:', len(np.unique(y_test)))
-    scipy_col, pyspark_col = create_subcol()
-    create_sidelayout(scipy_col, pyspark_col)
-    plot()
 
+    # Assuming 'model' is defined somewhere in your code
+    # If not, you need to define it or pass it as an argument to create_subcol
+    model = None
+
+    # Assuming create_subcol returns scipy_col and pyspark_col
+    scipy_col, pyspark_col = create_subcol(data, X_test, y_test, model)
+    
+    # Render the plots using the render_plot function
+    for i in range(3):  # Assuming there are 3 plots
+        render_plot(scipy_col, pyspark_col, i, f'Plot {i + 1}', (8, 6), data, X_test, y_test, model)
+
+    # Display the layout
+    create_sidelayout(scipy_col, pyspark_col)
 
 if __name__ == '__main__':
     main()
