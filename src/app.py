@@ -181,8 +181,19 @@ def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size):
     if i == 0:
         plt.hist(data['cardio'], edgecolor='black', bins=10, alpha=0.7)
     elif i == 1:
+        # Assuming your data is stored in a DataFrame named 'data'
+        categorical_columns = ['gender', 'cholesterol', 'gluc', 'smoke', 'alco', 'active', 'cardio']
+        
+        # Select only the categorical columns from the DataFrame
+        categorical_data = data[categorical_columns]
+        
+        # Melt the DataFrame to create df_categorical
+        df_categorical = pd.melt(categorical_data)
+        
+        # Now df_categorical is ready to be used in the sns.countplot or other analyses
+
         sns.countplot(
-            x="variable", hue="value", data=pd.melt(df_categorical), ax=ax
+            x="variable", hue="value", data=df_categorical, ax=ax
         )
     elif i == 2:
         feature_importances = model.get_feature_importances()
