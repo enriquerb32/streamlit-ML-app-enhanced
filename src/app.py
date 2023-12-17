@@ -201,6 +201,18 @@ def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test
             ax.set_ylabel('Actual Label')
 
 
+# Load data and prepare dataset
+data = scikit_func.load_data()
+X_train, X_test, y_train, y_test = scikit_func.prepare_dataset(data)
+
+# Sidebar controls
+st.sidebar.markdown('''
+__⛔ PySpark is a computational expensive operation __  
+Selecting _Yes_ will trigger Spark Session automatically!  
+''', unsafe_allow_html=True)
+pyspark_enabled = st.sidebar.radio("PySpark_Enabled", ('No', 'Yes'))
+
+
 # Main function
 def main():
     st.title('''Streamlit ![](https://assets.website-files.com/5dc3b47ddc6c0c2a1af74ad0/5e0a328bedb754beb8a973f9_logomark_website.png) Healthcare ML Data App''')
