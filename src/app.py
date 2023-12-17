@@ -121,7 +121,7 @@ def create_subcol():
         with col_plot[1]:
             # Render the corresponding plot within the column
             fig_size = (8, 6)
-            render_plot(scipy_col, pyspark_col, i, f'Scikit-Learn Plot {i + 1}', fig_size)
+            render_plot(scipy_col, pyspark_col, i, f'Scikit-Learn Plot {i + 1}', fig_size, data, X_test, y_test, model)
 
     # Check if PySpark is enabled and display the PySpark section if so
     if pyspark_enabled == 'Yes':
@@ -137,40 +137,10 @@ def create_subcol():
                 st.subheader(f'PySpark Plot {i + 1}')
             with col_plot[1]:
                 # Render the corresponding plot within the column
-                render_plot(scipy_col, pyspark_col, num_plots + i, f'PySpark Plot {i + 1}')
+                render_plot(scipy_col, pyspark_col, num_plots + i, f'PySpark Plot {i + 1}', fig_size, data, X_test, y_test, model)
 
     return scipy_col, pyspark_col
 
-def plot(scipy_col, pyspark_col, i, scikit_classifier_name):  
-    if i == 0:
-        plot_title = "Cardiovascular Diseases Distribution"
-        fig_size = (6, 4)
-        col_plot = st.columns(2)
-    elif i == 1:
-        plot_title = "People Exposed to CVD more"
-        fig_size = (6, 4)
-        col_plot = st.columns(2)
-    elif i == 2:
-        if scikit_classifier_name == "Decision Tree":
-            plot_title = "Feature Importances - Scikit-Learn"
-        elif scikit_classifier_name == "Random Forest":
-            plot_title = "Feature Importances - Scikit-Learn"
-        else:
-            plot_title = "Feature Importances - PySpark"
-        fig_size = (10, 6)
-        col_plot = st.columns(3)
-    elif i == 3:
-        plot_title = "ROC Curve"
-        fig_size = (6, 4)
-        col_plot = st.columns(2)
-    elif i == 4:
-        plot_title = "Confusion Matrix"
-        fig_size = (7, 5)
-        col_plot = st.columns(2)
-
-    # Create a new thread to render the plot
-    plot_thread = threading.Thread(target=render_plot, args=(scipy_col, pyspark_col, i, plot_title, fig_size))
-    plot_thread.start()
     
 
 def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test, model, roc_auc=None):
