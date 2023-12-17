@@ -200,6 +200,15 @@ def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test
             ax.set_xlabel('Predicted Label')
             ax.set_ylabel('Actual Label')
 
+    # Display the plot in the appropriate column
+    if i < 3:
+        scipy_col.pyplot(fig)
+    else:
+        pyspark_col.pyplot(fig)
+
+    # Return the figure and axes
+    return fig, ax
+
 
 # Load data and prepare dataset
 data = scikit_func.load_data()
@@ -239,10 +248,12 @@ def main():
     
     # Render the plots using the render_plot function
     for i in range(3):  # Assuming there are 3 plots
-        render_plot(scipy_col, pyspark_col, i, f'Plot {i + 1}', (8, 6), data, X_test, y_test, model)
+        fig, ax = render_plot(scipy_col, pyspark_col, i, f'Plot {i + 1}', (8, 6), data, X_test, y_test, model)
+        scipy_col.pyplot(fig)
 
     # Display the layout
     create_sidelayout(scipy_col, pyspark_col)
+
 
 if __name__ == '__main__':
     main()
