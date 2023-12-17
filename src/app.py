@@ -247,11 +247,18 @@ def main():
     scipy_col, pyspark_col = create_subcol(data, X_test, y_test, model)
     
     # Render the plots using the render_plot function
+    scikit_plots = []  # Store the plots for Scikit Learn
+    pyspark_plots = []  # Store the plots for PySpark
+
     for i in range(3):  # Assuming there are 3 plots
         fig, ax = render_plot(scipy_col, pyspark_col, i, f'Plot {i + 1}', (8, 6), data, X_test, y_test, model)
+        scikit_plots.append((fig, ax))
+
+    # Display the Scikit Learn plots
+    for fig, ax in scikit_plots:
         scipy_col.pyplot(fig)
 
-    # Display the layout
+    # Display the layout for Scikit Learn
     create_sidelayout(scipy_col, pyspark_col)
 
 
