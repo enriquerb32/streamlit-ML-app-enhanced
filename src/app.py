@@ -169,11 +169,11 @@ def plot(scipy_col, pyspark_col, i, scikit_classifier_name):
         col_plot = st.columns(2)
 
     # Create a new thread to render the plot
-    plot_thread = threading.Thread(target=_render_plot, args=(scipy_col, pyspark_col, i, plot_title, fig_size))
+    plot_thread = threading.Thread(target=render_plot, args=(scipy_col, pyspark_col, i, plot_title, fig_size))
     plot_thread.start()
     
 
-def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size):
+def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test, model, roc_auc=None):
     # Create the figure and axes
     fig, ax = plt.subplots(figsize=fig_size)
 
@@ -191,34 +191,34 @@ def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size):
         df_categorical = pd.melt(categorical_data)
         
         # Now df_categorical is ready to be used in the sns.countplot or other analyses
-
         sns.countplot(
             x="variable", hue="value", data=df_categorical, ax=ax
         )
     elif i == 2:
-        feature_importances = model.get_feature_importances()
-        ax.bar(X.columns, feature_importances)
-        ax.set_xlabel('Feature')
-        ax.set_ylabel('Feature Importance')
+        # Handle feature importances based on the classifier type
+        if hasattr(model, 'feature_importances_'):
+            feature_importances = model.feature_importances_
+            ax.bar(X.columns, feature_importances)
+            ax.set_xlabel('Feature')
+            ax.set_ylabel('Feature Importance')
     elif i == 3:
-        fpr, tpr, thresholds = roc_curve(y_test, model.predict_proba(X_test)[:, 1])
-        ax.plot(fpr, tpr)
-        ax.set_xlabel('False Positive Rate')
-        ax.set_ylabel('True Positive Rate')
-        ax.set_title('ROC Curve')
-        ax.set_title('ROC Curve')
-        st.write('AUC:', round(roc_auc, 3))
+        # Assuming your model has a predict_proba method
+        if hasattr(model, 'predict_proba'):
+            fpr, tpr, thresholds = roc_curve(y_test, model.predict_proba(X)[:, 1])
+            ax.plot(fpr, tpr)
+            ax.set_xlabel('False Positive Rate')
+            ax.set_ylabel('True Positive Rate')
+            ax.set_title('ROC Curve')
+            st.write('AUC:', round(roc_auc_score(y_test, model.predict_proba(X)[:, 1]), 3))
     elif i == 4:
-        confusion_matrix = confusion_matrix(y_test, model.predict(X_test))
-        sns.heatmap(
-            confusion_matrix, annot=True, fmt='g', linewidths=0.5, ax=ax
-        )
-        ax.set_xlabel('Predicted Label')
-        ax.set_ylabel('Actual Label')
-
-    # Notify the main thread that the plot has been rendered
-    with _lock:
-        st.pyplot(fig)
+        # Assuming your model has a predict method
+        if hasattr(model, 'predict'):
+            confusion_mat = confusion_matrix(y_test, model.predict(X))
+            sns.heatmap(
+                confusion_mat, annot=True, fmt='g', linewidths=0.5, ax=ax
+            )
+            ax.set_xlabel('Predicted Label')
+            ax.set_ylabel('Actual Label')
 
 
 data = scikit_func.load_data()
