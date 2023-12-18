@@ -145,7 +145,7 @@ def create_subcol(data, X_test, y_test, model):
     return scipy_col, pyspark_col
 
     
-def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test, model, roc_auc=None):
+def render_plot(scipy_col, pyspark_col, i, plot_title, fig_size, data, X, y_test, model):
     # Create the figure and axes
     fig, ax = plt.subplots(figsize=fig_size)
 
@@ -278,9 +278,9 @@ def main():
                     fig, ax = render_plot(scikit_col, pyspark_col, j, f'Scikit-Learn Plot {j + 1}', (8, 6), data, X_test, y_test, model)
                     plots.append((fig, ax))
 
-    # Display the plots
-    for fig, ax in plots:
-        scikit_col.pyplot(fig)
+        # Display the plots for PySpark
+        for fig, ax in plots:
+            pyspark_col.pyplot(fig)
 
     else:
         # Use Scikit-learn model
@@ -310,7 +310,7 @@ def main():
 
                 # Render the plots using the render_plot function
                 for j in range(3):  # Assuming there are 3 plots
-                    fig, ax = render_plot(scikit_col, j, f'Scikit-Learn Plot {j + 1}', (8, 6), data, X_test, y_test, model)
+                    fig, ax = render_plot(scikit_col, pyspark_col, j, f'Scikit-Learn Plot {j + 1}', (8, 6), data, X_test, y_test, model)
                     plots.append((fig, ax))
 
                 # Display the plots
@@ -322,4 +322,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
+    
