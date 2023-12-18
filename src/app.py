@@ -286,29 +286,29 @@ def main():
             ![scikit](https://scikit-learn.org/stable/_static/scikit-learn-logo-small.png)''')
 
         # Dynamically create columns for the Scikit-Learn plots
-        for i in range(3):
-            col_plot = scikit_col.columns(2)
-            with col_plot[0], _lock:
-                st.subheader(f'Scikit-Learn Plot {i + 1}')
-            with col_plot[1]:
-                # Render the corresponding plot within the column
-                classifier_name = scikit_col.selectbox(
-                    'Select classifier',
-                    scikit_func.get_sidebar_classifier(),
-                    key='scikit'
-                )
-                params = add_parameter_ui(classifier_name)
-                scikit_col.write(f'Classifier = {classifier_name}')
-                scikit_col.write(f'Accuracy = {scikit_func.trigger_classifier(classifier_name, params, X_train, X_test, y_train, y_test)}')
-        
-                # Instantiate the Scikit-learn model based on the selected classifier
-                model = scikit_func.get_model(classifier_name, params)
-        
-                # Render the plots using the render_plot function
-                plots = []  # Store the plots
-                for i in range(3):  # Assuming there are 3 plots
-                    fig, ax = render_plot(scikit_col, i, f'Scikit-Learn Plot {i + 1}', (8, 6), data, X_test, y_test, model)
-                    plots.append((fig, ax))
+for i in range(3):
+    col_plot = scikit_col.columns(2)
+    plots = []  # Store the plots
+    with col_plot[0], _lock:
+        st.subheader(f'Scikit-Learn Plot {i + 1}')
+    with col_plot[1]:
+        # Render the corresponding plot within the column
+        classifier_name = scikit_col.selectbox(
+            'Select classifier',
+            scikit_func.get_sidebar_classifier(),
+            key='scikit'
+        )
+        params = add_parameter_ui(classifier_name)
+        scikit_col.write(f'Classifier = {classifier_name}')
+        scikit_col.write(f'Accuracy = {scikit_func.trigger_classifier(classifier_name, params, X_train, X_test, y_train, y_test)}')
+
+        # Instantiate the Scikit-learn model based on the selected classifier
+        model = scikit_func.get_model(classifier_name, params)
+
+        # Render the plots using the render_plot function
+        for j in range(3):  # Assuming there are 3 plots
+            fig, ax = render_plot(scikit_col, j, f'Scikit-Learn Plot {j + 1}', (8, 6), data, X_test, y_test, model)
+            plots.append((fig, ax))
 
         # Display the plots
         for fig, ax in plots:
