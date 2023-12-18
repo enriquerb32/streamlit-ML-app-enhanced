@@ -243,6 +243,9 @@ def main():
     # Create columns for Scikit-learn and PySpark
     scikit_col, pyspark_col = st.columns(2)
 
+    # Initialize the plots list outside both loops
+    plots = []
+
     # Check if PySpark is enabled
     if pyspark_enabled == 'Yes':
         # Use PySpark model
@@ -251,33 +254,33 @@ def main():
               ![pyspark](https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Apache_Spark_logo.svg/120px-Apache_Spark_logo.svg.png)
               ''')
 
-        # Dynamically create columns for the PySpark plots
+        # Dynamically create columns for the Scikit-Learn plots
         for i in range(3):
-            col_plot = pyspark_col.columns(2)
+            col_plot = scikit_col.columns(2)
             with col_plot[0], _lock:
-                st.subheader(f'PySpark Plot {i + 1}')
+                st.subheader(f'Scikit-Learn Plot {i + 1}')
             with col_plot[1]:
                 # Render the corresponding plot within the column
-                classifier_name = pyspark_col.selectbox(
+                classifier_name = scikit_col.selectbox(
                     'Select classifier',
-                    pyspark_func.get_sidebar_classifier(), key='pyspark'
+                    scikit_func.get_sidebar_classifier(),
+                    key='scikit'
                 )
-                pyspark_col.write(f'Classifier = {classifier_name}')
-                accuracy = pyspark_buildmodel(classifier_name)
-                pyspark_col.write(f'Accuracy = {accuracy}')
+                params = add_parameter_ui(classifier_name)
+                scikit_col.write(f'Classifier = {classifier_name}')
+                scikit_col.write(f'Accuracy = {scikit_func.trigger_classifier(classifier_name, params, X_train, X_test, y_train, y_test)}')
 
-                # Instantiate the PySpark model based on the selected classifier
-                model = pyspark_func.get_model(classifier_name, None)
+                # Instantiate the Scikit-learn model based on the selected classifier
+                model = scikit_func.get_model(classifier_name, params)
 
                 # Render the plots using the render_plot function
-                plots = []  # Store the plots
-                for i in range(3):  # Assuming there are 3 plots
-                    fig, ax = render_plot(pyspark_col, i, f'PySpark Plot {i + 1}', (8, 6), data, X_test, y_test, model)
+                for j in range(3):  # Assuming there are 3 plots
+                    fig, ax = render_plot(scikit_col, pyspark_col, j, f'Scikit-Learn Plot {j + 1}', (8, 6), data, X_test, y_test, model)
                     plots.append((fig, ax))
 
-                # Display the plots
-                for fig, ax in plots:
-                    pyspark_col.pyplot(fig)
+    # Display the plots
+    for fig, ax in plots:
+        scikit_col.pyplot(fig)
 
     else:
         # Use Scikit-learn model
@@ -286,36 +289,37 @@ def main():
             ![scikit](https://scikit-learn.org/stable/_static/scikit-learn-logo-small.png)''')
 
         # Dynamically create columns for the Scikit-Learn plots
-for i in range(3):
-    col_plot = scikit_col.columns(2)
-    plots = []  # Store the plots
-    with col_plot[0], _lock:
-        st.subheader(f'Scikit-Learn Plot {i + 1}')
-    with col_plot[1]:
-        # Render the corresponding plot within the column
-        classifier_name = scikit_col.selectbox(
-            'Select classifier',
-            scikit_func.get_sidebar_classifier(),
-            key='scikit'
-        )
-        params = add_parameter_ui(classifier_name)
-        scikit_col.write(f'Classifier = {classifier_name}')
-        scikit_col.write(f'Accuracy = {scikit_func.trigger_classifier(classifier_name, params, X_train, X_test, y_train, y_test)}')
+        for i in range(3):
+            col_plot = scikit_col.columns(2)
+            plots = []  # Store the plots
+            with col_plot[0], _lock:
+                st.subheader(f'Scikit-Learn Plot {i + 1}')
+            with col_plot[1]:
+                # Render the corresponding plot within the column
+                classifier_name = scikit_col.selectbox(
+                    'Select classifier',
+                    scikit_func.get_sidebar_classifier(),
+                    key='scikit'
+                )
+                params = add_parameter_ui(classifier_name)
+                scikit_col.write(f'Classifier = {classifier_name}')
+                scikit_col.write(f'Accuracy = {scikit_func.trigger_classifier(classifier_name, params, X_train, X_test, y_train, y_test)}')
 
-        # Instantiate the Scikit-learn model based on the selected classifier
-        model = scikit_func.get_model(classifier_name, params)
+                # Instantiate the Scikit-learn model based on the selected classifier
+                model = scikit_func.get_model(classifier_name, params)
 
-        # Render the plots using the render_plot function
-        for j in range(3):  # Assuming there are 3 plots
-            fig, ax = render_plot(scikit_col, j, f'Scikit-Learn Plot {j + 1}', (8, 6), data, X_test, y_test, model)
-            plots.append((fig, ax))
+                # Render the plots using the render_plot function
+                for j in range(3):  # Assuming there are 3 plots
+                    fig, ax = render_plot(scikit_col, j, f'Scikit-Learn Plot {j + 1}', (8, 6), data, X_test, y_test, model)
+                    plots.append((fig, ax))
 
-        # Display the plots
-        for fig, ax in plots:
-            scikit_col.pyplot(fig)
+                # Display the plots
+                for fig, ax in plots:
+                    scikit_col.pyplot(fig)
 
     # Display the layout for Scikit Learn and PySpark
     create_sidelayout(scikit_col, pyspark_col)
 
 if __name__ == '__main__':
     main()
+
