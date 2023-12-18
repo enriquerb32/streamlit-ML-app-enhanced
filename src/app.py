@@ -300,19 +300,19 @@ def main():
                 params = add_parameter_ui(classifier_name)
                 scikit_col.write(f'Classifier = {classifier_name}')
                 scikit_col.write(f'Accuracy = {scikit_func.trigger_classifier(classifier_name, params, X_train, X_test, y_train, y_test)}')
-
+        
                 # Instantiate the Scikit-learn model based on the selected classifier
                 model = scikit_func.get_model(classifier_name, params)
-
+        
                 # Render the plots using the render_plot function
                 plots = []  # Store the plots
                 for i in range(3):  # Assuming there are 3 plots
                     fig, ax = render_plot(scikit_col, i, f'Scikit-Learn Plot {i + 1}', (8, 6), data, X_test, y_test, model)
                     plots.append((fig, ax))
 
-                # Display the plots
-                for fig, ax in plots:
-                    scikit_col.pyplot(fig)
+        # Display the plots
+        for fig, ax in plots:
+            scikit_col.pyplot(fig)
 
     # Display the layout for Scikit Learn and PySpark
     create_sidelayout(scikit_col, pyspark_col)
