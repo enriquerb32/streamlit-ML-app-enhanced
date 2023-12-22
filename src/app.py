@@ -266,10 +266,9 @@ def main():
                 st.subheader(f'PySpark Plot {i + 1}')
             with col_plot[1]:
                 # Render the corresponding plot within the column
-                classifier_name = pyspark_col.selectbox(
+                classifier_name = st.sidebar.selectbox(
                     'Select classifier',
-                    pyspark_func.get_sidebar_classifier(),
-                    key='pyspark'
+                    pyspark_func.get_sidebar_classifier(), key='pyspark'
                 )
                 params = add_parameter_ui(classifier_name)
                 pyspark_col.write(f'Classifier = {classifier_name}')
