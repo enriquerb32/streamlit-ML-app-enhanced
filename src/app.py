@@ -44,24 +44,24 @@ def add_parameter_ui(clf_name):
     return params
 
 
-def pyspark_buildmodel(pyspark_classifier_name):
+def pyspark_buildmodel(pyspark_classifier_name, data):
     spark = pyspark_func.get_spark_session()
     trainingData, testData = pyspark_func.prepare_dataset(spark, data)
     return pyspark_func.training(spark, pyspark_classifier_name, trainingData, testData)
 
 
-def pyspark_operation(pyspark_col):
+def pyspark_operation(pyspark_col, data, X_test, y_test):
     st.sidebar.subheader('PySpark')
     pyspark_classifier_name = st.sidebar.selectbox(
         'Select classifier',
         pyspark_func.get_sidebar_classifier(), key='pyspark'
     )
     pyspark_col.write(f'Classifier = {pyspark_classifier_name}')
-    accuracy = pyspark_buildmodel(pyspark_classifier_name)
+    accuracy = pyspark_buildmodel(pyspark_classifier_name, data)
     pyspark_col.write(f'Accuracy = {accuracy}')
 
 
-def create_sidelayout(scipy_col, pyspark_col):
+def create_sidelayout(scipy_col, pyspark_col, pyspark_enabled, data, X_test, y_test, X_train, y_train):
     """
     Create machine learning options and handle plots
     :param scipy_col: Scikit-Learn section in the main page
@@ -87,21 +87,20 @@ def create_sidelayout(scipy_col, pyspark_col):
     accuracy = scikit_func.trigger_classifier(scikit_classifier_name, params, X_train, X_test, y_train, y_test)
 
     # Display accuracy in the Scikit-Learn section
-    scipy_col.write(f'Accuracy = {accuracy}')
+    scipy_col.write(f'Accuracy = {accuracy}')
 
     # Check if PySpark is enabled and handle PySpark operations if so
     if pyspark_enabled == 'Yes':
-        pyspark_operation(pyspark_col)
+        pyspark_operation(pyspark_col, data, X_test, y_test)
 
         # Check if the selected classifier is supported for plotting in PySpark
         if scikit_func.get_sidebar_classifier() in ['Decision Tree', 'Random Forest']:
             # Plot the corresponding PySpark plots
             for i in range(3):
-                plot(scipy_col, pyspark_col, i)
+                plt.plot(scipy_col, pyspark_col, i)
         else:
             # Display a warning for PySpark plotting
             st.warning('Plots for PySpark are not available yet')
-
 
 
 def create_subcol(data, X_test, y_test, model):
@@ -140,7 +139,7 @@ def create_subcol(data, X_test, y_test, model):
         for i in range(num_plots):
             col_plot = pyspark_col.columns(2)  # Use 'pyspark_col' instead of 'st'
             with col_plot[0], _lock:
-                st.subheader(f'PySpark Plot {i + 1}')
+                                st.subheader(f'PySpark Plot {i + 1}')
             with col_plot[1]:
                 # Render the corresponding plot within the column
                 render_plot(scipy_col, pyspark_col, num_plots + i, f'PySpark Plot {i + 1}', fig_size, data, X_test, y_test, model)
@@ -280,46 +279,6 @@ def main():
                 model = pyspark_func.get_model(classifier_name, params)
 
                 # Render the plots using the render_plot function
-                for j in range(2):  # Assuming there are 2 PySpark-specific plots
-                    fig, ax = render_plot(scikit_col, pyspark_col, j + 3, f'PySpark Plot {j + 1}', (8, 6), data, X_test, y_test, model)
-                    plots.append((fig, ax))
-
-        # Display the plots for PySpark
-        for fig, ax in plots:
-            pyspark_col.pyplot(fig)
-
-    else:
-        # Use Scikit-learn model
-        scikit_col.header('''
-            __Scikit Learn ML__
-            ![scikit](https://scikit-learn.org/stable/_static/scikit-learn-logo-small.png)''')
-
-        # Render the general plots for Scikit-Learn
-        for i in range(3):  # Assuming there are 3 general plots
-            fig, ax = render_plot(scikit_col, pyspark_col, i, f'General Plot {i + 1}', (8, 6), data, X_test, y_test, None)
-            plots.append((fig, ax))
-
-        # Dynamically create columns for the Scikit-Learn plots
-        for i in range(2):  # Assuming there are 2 Scikit-Learn-specific plots
-            col_plot = scikit_col.columns(2)
-            plots = []  # Store the plots
-            with col_plot[0], _lock:
-                st.subheader(f'Scikit-Learn Plot {i + 1}')
-            with col_plot[1]:
-                # Render the corresponding plot within the column
-                classifier_name = scikit_col.selectbox(
-                    'Select classifier',
-                    scikit_func.get_sidebar_classifier(),
-                    key='scikit'
-                )
-                params = add_parameter_ui(classifier_name)
-                scikit_col.write(f'Classifier = {classifier_name}')
-                scikit_col.write(f'Accuracy = {scikit_func.trigger_classifier(classifier_name, params, X_train, X_test, y_train, y_test)}')
-
-                # Instantiate the Scikit-learn model based on the selected classifier
-                model = scikit_func.get_model(classifier_name, params)
-
-                # Render the plots using the render_plot function
                 for j in range(2):  # Assuming there are 2 Scikit-Learn-specific plots
                     fig, ax = render_plot(scikit_col, pyspark_col, j + 3, f'Scikit-Learn Plot {j + 1}', (8, 6), data, X_test, y_test, model)
                     plots.append((fig, ax))
@@ -329,7 +288,8 @@ def main():
                     scikit_col.pyplot(fig)
 
     # Display the layout for Scikit Learn and PySpark
-    create_sidelayout(scikit_col, pyspark_col)
+    create_sidelayout(scikit_col, pyspark_col, pyspark_enabled, data, X_test, y_test, X_train, y_train)
 
 if __name__ == '__main__':
     main()
+
