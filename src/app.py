@@ -273,7 +273,7 @@ def main():
                 )
                 params = add_parameter_ui(classifier_name)
                 pyspark_col.write(f'Classifier = {classifier_name}')
-                pyspark_col.write(f'Accuracy = {pyspark_func.trigger_classifier(classifier_name, params, X_train, X_test, y_train, y_test)}')
+                pyspark_col.write(f'Accuracy = {pyspark_buildmodel(classifier_name, data)}')
 
                 # Instantiate the PySpark model based on the selected classifier
                 model = pyspark_func.get_model(classifier_name, params)
